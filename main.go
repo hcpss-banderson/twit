@@ -73,12 +73,20 @@ func main() {
 
 func render(template string, destFile *os.File, params map[string]interface{}) {
 	if html {
+		funcMap := htmlTemplate.FuncMap{
+			"ToBool": ToBool,
+		}
+
 		htmlTemplate.
-			Must(htmlTemplate.New("html").Parse(template)).
+			Must(htmlTemplate.New("html").Funcs(funcMap).Parse(template)).
 			Execute(destFile, params)
 	} else {
+		funcMap := textTemplate.FuncMap{
+			"ToBool": ToBool,
+		}
+
 		textTemplate.
-			Must(textTemplate.New("text").Parse(template)).
+			Must(textTemplate.New("text").Funcs(funcMap).Parse(template)).
 			Execute(destFile, params)
 	}
 }
