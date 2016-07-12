@@ -32,17 +32,16 @@ Arguments:
                           overwritten.
 
 Options:
-  -f, --params-file=FILE  The path to a YAML formatted file containing the
+  -p, --params=PARAMS     Params can either be the path to a YAML formatted file
+                          with template parameters or a JSON encoded string of
                           template parameters.
-  -p, --params=PARAMS     A JSON formatted string containing the template
-                          parameters.
-      --html              Template in HTML mode. This does some output escaping.
   -h, --help              Display this help information.
   -v, --version           Display version information.
 
 Examples:
   twit settings.php.tpl ../default/setting.php --params='{"dbname": "drupal"}'
-  twit default.conf.tpl /etc/apache2/sites-available/default.conf -f=apache.yml
+  twit default.conf.tpl /etc/apache2/sites-available/default.conf -p apache.yml
+  twit template.tpl page.html -p param1.yml -p param2.yml -p '{"key": "value"}'
 `
 )
 

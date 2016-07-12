@@ -2,31 +2,22 @@ package main
 
 import (
 	"fmt"
-	htmlTemplate "html/template"
-	"io/ioutil"
 	"log"
 	"os"
-	textTemplate "text/template"
 
 	flag "github.com/ogier/pflag"
 )
 
 // VERSION of the application.
-const VERSION = "v0.1.0"
+const VERSION = "v1.0.0"
 
-var (
-	source, destination string
-	params              map[string]interface{}
-	html                bool
-)
+var app *Twit
 
 func init() {
-	var paramsPath, paramsJSON string
 	var version bool
+	var templateParams TemplateParams
 
-	flag.StringVarP(&paramsPath, "params-file", "f", "", "")
-	flag.StringVarP(&paramsJSON, "params", "p", "", "")
-	flag.BoolVarP(&html, "html", "m", false, "")
+	flag.VarP(&templateParams, "params", "p", "")
 	flag.BoolVarP(&version, "version", "v", false, "")
 
 	flag.Usage = twitUsage
@@ -42,51 +33,14 @@ func init() {
 		log.Fatal("Not enough arguments.")
 	}
 
-	source = flag.Arg(0)
-	destination = flag.Arg(1)
-	setJSONParams(paramsJSON)
-	setFileParams(paramsPath)
+	twit, err := NewTwit(flag.Arg(0), flag.Arg(1), templateParams)
+	if err != nil {
+		panic(err)
+	}
+
+	app = twit
 }
 
 func main() {
-	destinationFile, err := os.Create(destination)
-	if err != nil {
-		log.Fatalf(
-			"Could not create destination file %s. The error was %s",
-			destination,
-			err.Error(),
-		)
-	}
-	defer destinationFile.Close()
-
-	templateBytes, err := ioutil.ReadFile(source)
-	if err != nil {
-		log.Fatalf(
-			"Could not read the template %s. The error was %s",
-			source,
-			err.Error(),
-		)
-	}
-
-	render(string(templateBytes), destinationFile, params)
-}
-
-func render(template string, destFile *os.File, params map[string]interface{}) {
-	if html {
-		funcMap := htmlTemplate.FuncMap{
-			"ToBool": ToBool,
-		}
-
-		htmlTemplate.
-			Must(htmlTemplate.New("html").Funcs(funcMap).Parse(template)).
-			Execute(destFile, params)
-	} else {
-		funcMap := textTemplate.FuncMap{
-			"ToBool": ToBool,
-		}
-
-		textTemplate.
-			Must(textTemplate.New("text").Funcs(funcMap).Parse(template)).
-			Execute(destFile, params)
-	}
+	app.Render()
 }

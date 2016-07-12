@@ -3,68 +3,64 @@ package main
 import (
 	"encoding/json"
 	"io/ioutil"
-	"log"
+	"strings"
 
 	"gopkg.in/yaml.v2"
 )
 
-func setJSONParams(jsonString string) {
-	if jsonString == "" {
-		return
-	}
-
-	err := resolveParams(jsonString, json.Unmarshal)
-	if err != nil {
-		log.Fatalf(
-			"Could not read parameters. The error was: %s",
-			err.Error(),
-		)
-	}
+// TemplateParams is the representation of template parameters.
+type TemplateParams struct {
+	flags  []string
+	params map[string]interface{}
 }
 
-func setFileParams(paramsPath string) {
-	if paramsPath == "" {
-		return
-	}
-	paramsBytes, err := ioutil.ReadFile(paramsPath)
-	if err != nil {
-		log.Fatalf(
-			"Could not read file %s. The error was: %s",
-			paramsPath,
-			err.Error(),
-		)
-	}
-
-	err = resolveParams(string(paramsBytes), yaml.Unmarshal)
-	if err != nil {
-		log.Fatalf(
-			"Could not read parameters from %s. The error was: %s",
-			paramsPath,
-			err.Error(),
-		)
-	}
+// String is the string representation of the TemplateParams.
+func (tp *TemplateParams) String() string {
+	return strings.Join(tp.flags, ", ")
 }
 
-type unmarshaller func([]byte, interface{}) error
+// Set sets a new value from a flag.
+func (tp *TemplateParams) Set(value string) error {
+	// Let's keep track of the flags.
+	tp.flags = append(tp.flags, value)
 
-func resolveParams(
-	paramsString string,
-	callback func([]byte, interface{}) error,
-) (err error) {
-	var localParams map[string]interface{}
+	err := tp.AddParamsFromFlag(value)
 
-	if params == nil {
-		params = make(map[string]interface{})
+	return err
+}
+
+// AddParamsFromFlag adds params from a flag. Flag is either a path to a YAML
+// encoded file or a JSON encoded string.
+func (tp *TemplateParams) AddParamsFromFlag(flag string) error {
+	params := make(map[string]interface{})
+
+	jsonErr := json.Unmarshal([]byte(flag), &params)
+
+	if jsonErr != nil {
+		// We could not unmarshal as json so let's try as a YAML file.
+		paramBytes, readErr := ioutil.ReadFile(flag)
+		if readErr != nil {
+			return readErr
+		}
+
+		yamlErr := yaml.Unmarshal(paramBytes, &params)
+		if yamlErr != nil {
+			return yamlErr
+		}
 	}
 
-	err = callback([]byte(paramsString), &localParams)
-	if err != nil {
-		return
+	if tp.params == nil {
+		tp.params = make(map[string]interface{})
 	}
 
-	for k, v := range localParams {
-		params[k] = v
+	for k, v := range params {
+		tp.params[k] = v
 	}
 
-	return
+	return nil
+}
+
+// ToMap returns the map of template parameters.
+func (tp *TemplateParams) ToMap() map[string]interface{} {
+	return tp.params
 }

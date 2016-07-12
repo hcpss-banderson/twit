@@ -6,61 +6,60 @@ command line usage.
 
 ## Usage
 
-First create a YAML encoded file to house your parameters:
+### Templates
 
-```yaml
-# bands.yml
-title: Great Bands
-bands:
-  - name: The White Stripes
-    members:
-      - Jack White
-      - Meg White
-  - name: The Strokes
-    mambers:
-      - Julian Casablancas
-      - Nick Valensi
-      - Albert Hammond, Jr.
-      - Nikolai Fraiture
-      - Fabrizio Moretti
-  - name: Yeah Yeah Yeahs
-    members:
-      - Karen O
-      - Nick Zinner
-      - Brian Chase
-```
+Templates are written in the standard
+[Go template](https://golang.org/pkg/text/template) format.
 
-The create a Go formatted template called *bands.tpl*:
+### Filters
+
+Filter support comes from the [leekchan/gtf](https://github.com/leekchan/gtf)
+package.
+
+### Parameters
+
+TWIT accepts parameters for the template as either a YAML file or as a JSON
+string.
+
+### Example
+
+For our example, let's image that we needed to write an Apache vhosts
+configuration file.
+
+First we create a template. We'll call it *vhosts.conf.tpl*:
 
 ```go
-<!doctype html>
-<html>
-	<head>
-		<title>{{ .title }}</title>
-	</head>
-	<body>
-		<h1>{{ .title }}</h1>
-		{{ range $band := .bands }}
-			<h2>{{$band.name}}</h2>
-			<ul>
-				{{ range $member := $band.members }}
-					<li>{{ $member }}</li>
-				{{ end }}
-			</ul>
-		{{ end }}
-	</body>
-</html>
+Listen {{ .port }}
 
+ServerName {{ .server_name }}
+DocumentRoot "{{ .document_root }}"
+
+{{ range $host := .hosts }}
+    <VirtualHost {{ $host.ip }}>
+        DocumentRoot "{{ $host.document_root }}"
+        ServerName {{ $host.server_name }}
+    </VirtualHost>
+{{ end }}
 ```
 
-Then run TWIT:
+Then we will create a YAML encoded file to hold the parameters. We'll call it
+*vhosts.yml*:
+
+```yaml
+port:          80
+server_name:   server.company.com
+document_root: /srv/main
+hosts:
+  - ip:            172.20.30.1
+    document_root: /srv/website1
+    server_name:   site1.company.com
+  - ip:            172.20.30.2
+    document_root: /srv/website2
+    server_name:   site2.company.com
+```
+
+Generate the Apache configuration with TWIT:
 
 ```
-$ twit bands.tpl bands.html --params-file=bands.yml --html
-```
-
-Or you could pass in JSON instead:
-
-```
-$ twit bands.tpl bands.html --params='{"title", "Best Bands Ever"}'
+$ twit vhosts.conf.tpl /etc/apache2/sites-available/vhosts.conf -p vhosts.yml
 ```
