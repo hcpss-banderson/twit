@@ -14,11 +14,12 @@ const VERSION = "v1.0.0"
 var app *Twit
 
 func init() {
-	var version bool
+	var version, noEscape bool
 	var templateParams TemplateParams
 
 	flag.VarP(&templateParams, "params", "p", "")
 	flag.BoolVarP(&version, "version", "v", false, "")
+	flag.BoolVarP(&noEscape, "no-escape", "n", false, "")
 
 	flag.Usage = twitUsage
 
@@ -33,7 +34,7 @@ func init() {
 		log.Fatal("Not enough arguments.")
 	}
 
-	twit, err := NewTwit(flag.Arg(0), flag.Arg(1), templateParams)
+	twit, err := NewTwit(flag.Arg(0), flag.Arg(1), templateParams, !noEscape)
 	if err != nil {
 		panic(err)
 	}

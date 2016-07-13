@@ -35,6 +35,7 @@ Options:
   -p, --params=PARAMS     Params can either be the path to a YAML formatted file
                           with template parameters or a JSON encoded string of
                           template parameters.
+  -n, --no-escape         Disable automatic output escaping.
   -h, --help              Display this help information.
   -v, --version           Display version information.
 
