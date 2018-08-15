@@ -10,7 +10,7 @@ import (
 )
 
 // VERSION of the application.
-const VERSION = "v1.0.0"
+const VERSION = "v1.1.0"
 
 var version, noEscape, watch bool
 var source, destination, params string
