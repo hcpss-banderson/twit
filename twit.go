@@ -64,6 +64,9 @@ func (t *Twit) SetTargetFromPath(dest string) error {
 // Render renders the template.
 func (t *Twit) Render() {
 	params := t.TemplateParams.ToMap()
+	
+	t.Target.Truncate(0)
+	t.Target.Seek(0,0)
 
 	if t.HTML {
 		hTemplate.

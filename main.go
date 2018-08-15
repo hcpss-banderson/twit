@@ -6,24 +6,27 @@ import (
 	"os"
 
 	flag "github.com/ogier/pflag"
+	"github.com/fsnotify/fsnotify"
 )
 
 // VERSION of the application.
 const VERSION = "v1.0.0"
 
-var app *Twit
+var version, noEscape, watch bool
+var source, destination, params string
 
 func init() {
-	var version, noEscape bool
-	var templateParams TemplateParams
-
-	flag.VarP(&templateParams, "params", "p", "")
+	flag.StringVarP(&params, "params", "p", "", "")
 	flag.BoolVarP(&version, "version", "v", false, "")
 	flag.BoolVarP(&noEscape, "no-escape", "n", false, "")
+	flag.BoolVarP(&watch, "watch", "w", false, "")
 
 	flag.Usage = twitUsage
 
 	flag.Parse()
+	
+	source = flag.Arg(0)
+	destination = flag.Arg(1)
 
 	if version {
 		fmt.Printf("twit %s\n", VERSION)
@@ -33,15 +36,73 @@ func init() {
 	if flag.NArg() < 2 {
 		log.Fatal("Not enough arguments.")
 	}
+}
 
-	twit, err := NewTwit(flag.Arg(0), flag.Arg(1), templateParams, !noEscape)
-	if err != nil {
-		panic(err)
-	}
-
-	app = twit
+func rerender(twit *Twit, name string) {
+	templateParams := TemplateParams{}
+	templateParams.Set(params)
+	fmt.Printf("Changes detected in %#v\n", name)
+	fmt.Println("Rewriting template")
+	templateParams.Set(params)
+	twit.TemplateParams = templateParams
+	twit.SetSourceFromPath(source)
+	twit.Render()
 }
 
 func main() {
-	app.Render()
+	templateParams := TemplateParams{}
+	templateParams.Set(params)
+	twit, err := NewTwit(source, destination, templateParams, !noEscape)
+	if err != nil {
+		panic(err)
+	}
+	
+	twit.Render()
+	
+	if watch {
+		templateWatcher, err := fsnotify.NewWatcher()
+		if err != nil {
+			panic(err)
+		}
+		defer templateWatcher.Close()
+		
+		paramsWatcher, err := fsnotify.NewWatcher()
+		if err != nil {
+			panic(err)
+		}
+		defer paramsWatcher.Close()
+		
+		done := make(chan bool)
+		
+		go func() {
+			for {
+				select {
+				case event := <-templateWatcher.Events:
+					rerender(twit, event.Name)
+				case err := <-templateWatcher.Errors:
+					panic(err)
+				case event := <-paramsWatcher.Events:
+					rerender(twit, event.Name)
+				case err := <-paramsWatcher.Errors:
+					panic(err)
+				}
+			}
+		}()
+		
+		if err := templateWatcher.Add(source); err != nil {
+			panic(err)
+		} else {
+			fmt.Println("Watching" + source + " ...")
+		}
+		
+		if err := paramsWatcher.Add(params); err != nil {
+			// This probably means the params were passed in as json.
+		} else {
+			fmt.Println("Watching" + params + " ...")
+		}
+		
+		<-done
+	}
+	
+	
 }
