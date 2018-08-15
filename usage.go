@@ -38,6 +38,8 @@ Options:
   -n, --no-escape         Disable automatic output escaping.
   -h, --help              Display this help information.
   -v, --version           Display version information.
+  -w, --watch             Watch the template and params file (if provided) for 
+                          changes.
 
 Examples:
   twit settings.php.tpl ../default/setting.php --params='{"dbname": "drupal"}'
