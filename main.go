@@ -33,8 +33,12 @@ func init() {
 		os.Exit(0)
 	}
 
-	if flag.NArg() < 2 {
+	if flag.NArg() < 1 {
 		log.Fatal("Not enough arguments.")
+	}
+	
+	if watch && flag.NArg() < 2 {
+		log.Fatal("To use watch, you have to specify a destination.")
 	}
 }
 
@@ -52,7 +56,15 @@ func rerender(twit *Twit, name string) {
 func main() {
 	templateParams := TemplateParams{}
 	templateParams.Set(params)
-	twit, err := NewTwit(source, destination, templateParams, !noEscape)
+	
+	output := os.Stdout
+	if destination == "" {
+		output = os.Stdout
+	} else {
+		output, _ = os.Create(destination)
+	}
+	
+	twit, err := NewTwit(source, output, templateParams, !noEscape)	
 	if err != nil {
 		panic(err)
 	}
@@ -103,6 +115,4 @@ func main() {
 		
 		<-done
 	}
-	
-	
 }

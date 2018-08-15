@@ -24,12 +24,13 @@ Distributed under the terms of the MIT license
 	// USAGE show people how to use the program.
 	USAGE = `
 Usage:
-  twit <template> <destination> [options]
+  twit <template> [<destination>] [options]
 
 Arguments:
   template                The path to a Golang formatted template.
   destination             The path to template output. Existing files will be
-                          overwritten.
+                          overwritten. If not specified, output will be written
+                          to STDOUT.
 
 Options:
   -p, --params=PARAMS     Params can either be the path to a YAML formatted file
@@ -39,7 +40,7 @@ Options:
   -h, --help              Display this help information.
   -v, --version           Display version information.
   -w, --watch             Watch the template and params file (if provided) for 
-                          changes.
+                          changes. If used, a destination must be given.
 
 Examples:
   twit settings.php.tpl ../default/setting.php --params='{"dbname": "drupal"}'

@@ -3,6 +3,7 @@ package main
 import (
 	hTemplate "html/template"
 	"io/ioutil"
+	"io"
 	"os"
 	tTemplate "text/template"
 
@@ -13,23 +14,20 @@ import (
 type Twit struct {
 	TemplateParams TemplateParams
 	Source         string
-	Target         *os.File
+	Target         io.Writer
 	HTML           bool
 }
 
 // NewTwit create a new Twit instance.
-func NewTwit(source, dest string, params TemplateParams, html bool) (*Twit, error) {
+func NewTwit(source string, dest io.Writer, params TemplateParams, html bool) (*Twit, error) {
 	t := &Twit{
 		TemplateParams: params,
 		HTML:           html,
 	}
 
-	err := t.SetTargetFromPath(dest)
-	if err != nil {
-		return nil, err
-	}
+	t.Target = dest
 
-	err = t.SetSourceFromPath(source)
+	err := t.SetSourceFromPath(source)
 	if err != nil {
 		return nil, err
 	}
@@ -49,24 +47,15 @@ func (t *Twit) SetSourceFromPath(source string) error {
 	return nil
 }
 
-// SetTargetFromPath sets the target from a path to a file.
-func (t *Twit) SetTargetFromPath(dest string) error {
-	target, err := os.Create(dest)
-	if err != nil {
-		return err
-	}
-
-	t.Target = target
-
-	return nil
-}
-
 // Render renders the template.
 func (t *Twit) Render() {
 	params := t.TemplateParams.ToMap()
 	
-	t.Target.Truncate(0)
-	t.Target.Seek(0,0)
+	ta, ok := t.Target.(*os.File)
+	if ok {
+		ta.Truncate(0)
+		ta.Seek(0,0)
+	}
 
 	if t.HTML {
 		hTemplate.
