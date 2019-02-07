@@ -7,7 +7,8 @@ import (
 	"os"
 	tTemplate "text/template"
 
-	"github.com/leekchan/gtf"
+	// "github.com/leekchan/gtf"
+	"gtf"
 )
 
 // Twit is the structural representation of the Twit application.
