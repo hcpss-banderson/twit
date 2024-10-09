@@ -2,13 +2,13 @@ package main
 
 import (
 	hTemplate "html/template"
-	"io/ioutil"
 	"io"
+	"io/ioutil"
 	"os"
 	tTemplate "text/template"
 
-	// "github.com/leekchan/gtf"
-	"gtf"
+	"github.com/leekchan/gtf"
+	//"gtf"
 )
 
 // Twit is the structural representation of the Twit application.
@@ -51,11 +51,11 @@ func (t *Twit) SetSourceFromPath(source string) error {
 // Render renders the template.
 func (t *Twit) Render() {
 	params := t.TemplateParams.ToMap()
-	
+
 	ta, ok := t.Target.(*os.File)
 	if ok {
 		ta.Truncate(0)
-		ta.Seek(0,0)
+		ta.Seek(0, 0)
 	}
 
 	if t.HTML {
